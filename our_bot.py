@@ -83,11 +83,15 @@ def buy_sell_stocks(message, exchange):
     stockName, price, quantity, orderType = message['symbol'], message['price'], message['size'], message['dir']
     # we buy stock if trade price is lower than fair price (aka mean)
     if price < int(mean_stock_prices[stockName]) + margin and orderType == 'SELL':
+        if curr_pos[stockName] + quantity > position[stockName]:  # we cant buy more than limit
+            return None
         ID += 1
         order = {"type": "add", "order_id": ID, "symbol": stockName, "dir": "BUY", "price": price, "size": quantity}
         pending_orders[ID] = (order, quantity)
         write_to_exchange(exchange, order)
     elif price + margin > int(mean_stock_prices[stockName]) and orderType == 'BUY':
+        if curr_pos[stockName] - quantity < -position[stockName]:  # we cant buy more than limit
+            return None
         ID += 1
         order = {"type": "add", "order_id": ID, "symbol": stockName, "dir": "SELL", "price": price, "size": quantity}
         pending_orders[ID] = (order, quantity)
@@ -102,8 +106,12 @@ def buy_sell_bonds(message, exchange):
         ID += 1
         size = 1
         if message['price'] < 1000:
+            if curr_pos['BOND'] + size > position['BOND']:  # we cant buy more than limit
+                return None
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "BUY", "price": message['price'], "size": size}
         elif message['price'] >= 1000:
+            if curr_pos['BOND'] - size < -position['BOND']:  # we cant buy more than limit
+                return None
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "SELL", "price": message['price'], "size": size}
         pending_orders[ID] = (order, size)
         write_to_exchange(exchange, order)
@@ -118,6 +126,8 @@ def buy_convert_sell_adr(message, exchange):
     """
     global ID
     global expected_cash
+    global position
+    global curr_pos
  
     if message['type'] == 'trade' and message['symbol'] == 'VALBZ':
         add_to_recent_list('VALBZ', recent_stock_quantities['VALBZ'], recent_stock_prices['VALBZ'])
@@ -125,7 +135,7 @@ def buy_convert_sell_adr(message, exchange):
         add_to_recent_list('VALE', recent_stock_quantities['VALE'], recent_stock_prices['VALE'])
  
     quantity = min(recent_stock_quantities['VALBZ'][-1], recent_stock_quantities['VALE'][-1])
-    if recent_stock_prices['VALBZ'][-1] * quantity + 10 < recent_stock_prices['VALE'][-1] * quantity:
+    if (recent_stock_prices['VALBZ'][-1] * quantity + 10 < recent_stock_prices['VALE'][-1] * quantity) and (curr_pos["VALBZ"] + quantity > position["VALBZ"]) and (curr_pos["VALE"] - quantity > position["VALE"]):
         ID += 1
         expected_cash -= recent_stock_prices['VALBZ'][-1] * quantity
         print("tryna buy valbz", recent_stock_prices['VALBZ'][-1])
