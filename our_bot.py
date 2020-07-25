@@ -50,6 +50,10 @@ expected_cash = 0
 MOST_RECENT = 100
 recent_stock_prices = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[]}
 recent_stock_quantities = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[]}
+
+position = {"BOND": 100, "VALBZ": 10, "VALE": 10, "GS": 100, "MS": 100, "WFC": 100, "XLF": 100}
+curr_pos = {"BOND": 0, "VALBZ": 0, "VALE": 0, "GS": 0, "MS": 0, "WFC": 0, "XLF": 0}
+
 def add_to_recent_list(stockName, quantity, price):
     if len(recent_stock_prices[stockName]) == MOST_RECENT:
         recent_stock_prices[stockName].pop(0)
@@ -76,14 +80,14 @@ def buy_sell_stocks(message, exchange):
     if message['type'] != 'trade':
         return None
 
-    stockName, price, quantity = message['symbol'], message['price'], message['size']
+    stockName, price, quantity, orderType = message['symbol'], message['price'], message['size'], message['dir']
     # we buy stock if trade price is lower than fair price (aka mean)
-    if price < int(mean_stock_prices[stockName]) + margin:
+    if price < int(mean_stock_prices[stockName]) + margin and orderType == 'SELL':
         ID += 1
         order = {"type": "add", "order_id": ID, "symbol": stockName, "dir": "BUY", "price": price, "size": quantity}
         pending_orders[ID] = (order, quantity)
         write_to_exchange(exchange, order)
-    elif price + margin > int(mean_stock_prices[stockName]):
+    elif price + margin > int(mean_stock_prices[stockName]) and orderType == 'BUY':
         ID += 1
         order = {"type": "add", "order_id": ID, "symbol": stockName, "dir": "SELL", "price": price, "size": quantity}
         pending_orders[ID] = (order, quantity)
@@ -159,6 +163,7 @@ def buy_convert_sell_adr(message, exchange):
         write_to_exchange(exchange, order)
 
 
+
 #in the works
 def sell_adr(message, exchange):
     """
@@ -209,7 +214,7 @@ def main():
         get_stocks_prices(message)
         # buys/sells bonds
         if cash >= -20000:
-            buy_sell_bonds(message, exhcange)
+            buy_sell_bonds(message, exchange)
         
         if expected_cash >= -10000:
             buy_sell_stocks(message, exchange)
@@ -236,8 +241,10 @@ def main():
             pending_orders[message['order_id']] = (curr_order[0], curr_order[1] - message['size'])
             if message['dir'] == 'BUY':
                 cash -= message['size'] * message['price']
+                curr_pos[message['symbol']] += message['size']
             elif message['dir'] == 'SELL':
                 cash += message['size'] * message['price']
+                curr_pos[message['symbol']] -= message['size']
             print("we have ", cash, " cash now")
         
         if message['type'] == 'out':
