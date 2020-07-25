@@ -81,6 +81,8 @@ def buy_sell_stocks(message, exchange):
         return None
 
     stockName, price, quantity = message['symbol'], message['price'], message['size']
+    if stockName == 'BOND' or stockName == 'XTF':
+        return None
     # we buy stock if trade price is lower than fair price (aka mean)
     if price < int(mean_stock_prices[stockName]) + margin:
         if curr_pos[stockName] + quantity > position[stockName]:  # we cant buy more than limit
