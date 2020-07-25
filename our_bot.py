@@ -16,7 +16,7 @@ import json
 team_name="FHDA"
 # This variable dictates whether or not the bot is connecting to the prod
 # or test exchange. Be careful with this switch!
-test_mode = True
+test_mode = False
 
 # This setting changes which test exchange is connected to.
 # 0 is prod-like
@@ -83,17 +83,19 @@ def buy_sell_stocks(message, exchange):
         return None
 
     stockName, price, quantity = message['symbol'], message['price'], message['size']
-    if stockName == 'BOND' or stockName == 'XTF':
+    if stockName == 'BOND' or stockName == 'XLF' or stockName == 'VALE':
         return None
     # we buy stock if trade price is lower than fair price (aka mean)
-    if price < int(mean_stock_prices[stockName]) + margin:
+    if price + 1.2*margin < int(mean_stock_prices[stockName]):
+	print('boutta buy', stockName, 'cuz its', price, 'and mean price for it is', mean_stock_prices[stockName])
         if curr_pos[stockName] + quantity > position[stockName]:  # we cant buy more than limit
             return None
         ID += 1
         order = {"type": "add", "order_id": ID, "symbol": stockName, "dir": "BUY", "price": price, "size": quantity}
         pending_orders[ID] = (order, quantity)
         write_to_exchange(exchange, order)
-    elif price + margin > int(mean_stock_prices[stockName]):
+    elif price - 1.75*margin > int(mean_stock_prices[stockName]):
+	print('selling stuff!')
         if curr_pos[stockName] - quantity < -position[stockName]:  # we cant buy more than limit
             return None
         ID += 1
@@ -120,14 +122,14 @@ def buy_sell_bonds(message, exchange):
         pending_orders[ID] = (order, size)
         write_to_exchange(exchange, order)
 
-def buy_convert_sell_etf(message, exchange):
-    global ID
-    global expected_cash
-    global position
-    global curr_pos
+#def buy_convert_sell_etf(message, exchange):
+#    global ID
+#    global expected_cash
+#    global position
+#    global curr_pos
 
-    combined = 3 * recent_stock_prices['BOND'] + 2 * 
-    if recent_stock_prices("ETF") < 
+#    combined = 3 * recent_stock_prices['BOND'] + 2 * 
+#    if recent_stock_prices("ETF") < 
 
 
 
@@ -260,6 +262,7 @@ def main():
             elif message['dir'] == 'SELL':
                 cash += message['size'] * message['price']
                 curr_pos[message['symbol']] -= message['size']
+	    print(message['symbol'])
             print("we have ", cash, " cash now")
         
         if message['type'] == 'out':
