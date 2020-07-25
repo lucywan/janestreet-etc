@@ -43,17 +43,45 @@ def read_from_exchange(exchange):
 
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
-def get_bond_price():
-    return 1002
+pending_orders = {}
+cash = 0
+recent_bond_prices = [1000]
+mean_bond_price = 1000
 
+def get_bond_price(message):
+    global recent_bond_prices
+    if message['type'] == 'trade' and message['symbol'] == 'BOND':
+        if len(recent_bond_prices > 100):
+            recent_bond_prices = recent_bond_prices[-99:0]
+            recent_bond_prices.append(messaage['price'])
+        else:
+            recent_bond_prices.append(message['price'])
+    global mean_bond_price
+    mean_bond_price = sum(recent_bond_prices) / len(recent_bond_prices)
 
 ID = 0
-def basic_bond_order():
+def basic_buy_bond_order():
     global ID
     ID += 1
-    price = get_bond_price()
-    
-    return {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "BUY", "price": price, "size": 2}
+    price = int(mean_bond_price) - 2
+    size = 2  # TODO: change to something better
+    order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "BUY", "price": price, "size": size}
+    pending_orders[ID] = (order, size)
+    return order
+
+def basic_sell_bond_order():
+    global ID
+    ID += 1
+    price = int(mean_bond_price) + 2
+    size = 2  # TODO: change to something better
+    order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "SELL", "price": price, "size": size}
+    pending_orders[ID] = (order, size)
+    return order
+
+
+def take_action():
+    write_to_exchange(connect(), basic_buy_bond_order())
+    write_to_exchange(connect(), basic_sell_bond_order())
 
 def main():
     exchange = connect()
@@ -66,11 +94,28 @@ def main():
     print("The exchange replied:", hello_from_exchange, file=sys.stderr)
     while True:
         message = read_from_exchange(exchange)
-        print(message)
-        if(message["type"] == "close"):
+
+        get_bond_price(message)
+
+        if len(pending_orders) < 6:
+            take_action()
+            print("we have placed", len(pending_orders), "pending orders so far and we have ", cash, " USD left"
+        if message['type'] == 'reject':
+            print(message)
+        if message['type'] == 'fill':
+            print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
+            curr_order = pending_orders[message['order_id']]
+            pending_orders[message['order_id']] = (curr_order[0], curr_order[1] - message['size'])
+            global cash
+            if message['dir'] == 'BUY':
+                cash -= message['size'] * message['price']
+            elif message['dir'] == 'SELL':
+                cash += message['size'] * message['price']
+        if message['type'] == 'out':
+            del pending_orders[message['order_id']]
+        if message["type"] == "close":
             print("The round has ended")
             break
 
 if __name__ == "__main__":
     main()
-
