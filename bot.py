@@ -16,13 +16,13 @@ import json
 team_name="FHDA"
 # This variable dictates whether or not the bot is connecting to the prod
 # or test exchange. Be careful with this switch!
-test_mode = True
+test_mode = False
 
 # This setting changes which test exchange is connected to.
 # 0 is prod-like
 # 1 is slower
 # 2 is empty
-test_exchange_index=1
+test_exchange_index=0
 prod_exchange_hostname="production"
 
 port=25000 + (test_exchange_index if test_mode else 0)
@@ -79,20 +79,27 @@ def basic_sell_bond_order():
     pending_orders[ID] = (order, size)
     return order
 
-def buy_sell_bonds(message):
+expected_cash = 0
+
+def buy_sell_bonds(message, exchange):
     """
     Actually writes the order
     """
     if message['type'] == 'trade' and message['symbol'] == 'BOND':
         global ID
+	global expected_cash
         ID += 1
-        size = 1
+        size = message['size']
         if message['price'] < 1000:
+            expected_cash -= message['price']
+           # print("tryna buy", message['price'])
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "BUY", "price": message['price'], "size": size}
         elif message['price'] >= 1000:
+	   # print('tryna sell', message['price'])
+            expected_cash += message['price']
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "SELL", "price": message['price'], "size": size}
         pending_orders[ID] = (order, size)
-        write_to_exchange(connect(), order)
+        write_to_exchange(exchange, order)
 
 
 def take_action():
@@ -113,8 +120,8 @@ def main():
         message = read_from_exchange(exchange)
         
         # buys/sells bonds
-        if cash > -20000:
-            buy_sell_bonds(message)
+        if expected_cash > -20000:
+            buy_sell_bonds(message, exchange)
 
         # get_stock_price(message)
 
@@ -130,11 +137,11 @@ def main():
         if message['type'] == 'reject':
             print(message)
 
-        if message['type'] == 'ack':
-            print("Placed order of ", str(pending_orders[message['order_id']]))
+        #if message['type'] == 'ack':
+            #print("Placed order of ", str(pending_orders[message['order_id']]))
 
         if message['type'] == 'fill':
-            print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
+            #print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
             curr_order = pending_orders[message['order_id']]
             pending_orders[message['order_id']] = (curr_order[0], curr_order[1] - message['size'])
             if message['dir'] == 'BUY':
