@@ -94,14 +94,16 @@ def main():
     print("The exchange replied:", hello_from_exchange, file=sys.stderr)
     while True:
         message = read_from_exchange(exchange)
-
+        
         get_bond_price(message)
 
         if len(pending_orders) < 6:
             take_action()
             print("we have placed", len(pending_orders), "pending orders so far and we have ", cash, " USD")
+        
         if message['type'] == 'reject':
             print(message)
+
         if message['type'] == 'fill':
             print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
             curr_order = pending_orders[message['order_id']]
@@ -111,8 +113,11 @@ def main():
                 cash -= message['size'] * message['price']
             elif message['dir'] == 'SELL':
                 cash += message['size'] * message['price']
+            print("we have ", cash, " cash now")
+        
         if message['type'] == 'out':
             del pending_orders[message['order_id']]
+        
         if message["type"] == "close":
             print("The round has ended")
             break
