@@ -45,19 +45,20 @@ def read_from_exchange(exchange):
 # ~~~~~============== MAIN LOOP ==============~~~~~
 pending_orders = {}
 cash = 0
-recent_bond_prices = [1000]
-mean_bond_price = 1000
+recent_bond_prices = []
+mean_bond_price = 0
 
 def get_bond_price(message):
     global recent_bond_prices
     if message['type'] == 'trade' and message['symbol'] == 'BOND':
-        if len(recent_bond_prices) > 100:
-            recent_bond_prices = recent_bond_prices[-99:0]
-            recent_bond_prices.append(messaage['price'])
+        if len(recent_bond_prices) == 100:
+            recent_bond_prices.pop(0)
+            recent_bond_prices.append(message['price'])
         else:
             recent_bond_prices.append(message['price'])
-    global mean_bond_price
-    mean_bond_price = sum(recent_bond_prices) / len(recent_bond_prices)
+        print(message)
+        global mean_bond_price
+        mean_bond_price = sum(recent_bond_prices) / len(recent_bond_prices)
 
 ID = 0
 def basic_buy_bond_order():
@@ -103,6 +104,9 @@ def main():
         
         if message['type'] == 'reject':
             print(message)
+
+        if message['type'] == 'ack':
+            print("Placed order of ", str(pending_orders[message['order_id']]))
 
         if message['type'] == 'fill':
             print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
