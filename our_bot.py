@@ -55,6 +55,8 @@ position = {"BOND": 100, "VALBZ": 10, "VALE": 10, "GS": 100, "MS": 100, "WFC": 1
 curr_pos = {"BOND": 0, "VALBZ": 0, "VALE": 0, "GS": 0, "MS": 0, "WFC": 0, "XLF": 0}
 
 def add_to_recent_list(stockName, quantity, price):
+    if type(price) != int:
+        return None
     if len(recent_stock_prices[stockName]) == MOST_RECENT:
         recent_stock_prices[stockName].pop(0)
         recent_stock_prices[stockName].append(price)
@@ -107,11 +109,11 @@ def buy_sell_bonds(message, exchange):
         global ID
         ID += 1
         size = 1
-        if message['price'] < 1000:
+        if message['price'] < 1000  and (curr_pos["BOND"] + quantity < position["BOND"]):
             if curr_pos['BOND'] + size > position['BOND']:  # we cant buy more than limit
                 return None
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "BUY", "price": message['price'], "size": size}
-        elif message['price'] >= 1000:
+        elif message['price'] >= 1000 and (curr_pos["BOND"] - quantity > -1 * position["BOND"]):
             if curr_pos['BOND'] - size < -position['BOND']:  # we cant buy more than limit
                 return None
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "SELL", "price": message['price'], "size": size}
@@ -143,7 +145,7 @@ def buy_convert_sell_adr(message, exchange):
     
     if recent_stock_prices['VALBZ'] and recent_stock_prices['VALE']:
         quantity = min(recent_stock_quantities['VALBZ'][-1], recent_stock_quantities['VALE'][-1])
-        if (recent_stock_prices['VALBZ'][-1] * quantity + 10 < recent_stock_prices['VALE'][-1] * quantity) and (curr_pos["VALBZ"] + quantity < position["VALBZ"]) and (curr_pos["VALE"] - quantity > position["VALE"]):
+        if (recent_stock_prices['VALBZ'][-1] * quantity + 10 < recent_stock_prices['VALE'][-1] * quantity) and (curr_pos["VALBZ"] + quantity < position["VALBZ"]) and (curr_pos["VALE"] - quantity > -1 * position["VALE"]):
             ID += 1
             expected_cash -= recent_stock_prices['VALBZ'][-1] * quantity
             print("tryna buy valbz", recent_stock_prices['VALBZ'][-1])
@@ -161,7 +163,7 @@ def buy_convert_sell_adr(message, exchange):
             order = {"type": "add", "order_id": ID, "symbol": "VALE", "dir": "SELL", "price": recent_stock_prices['VALE'][-1], "size": quantity}
             pending_orders[ID] = (order, quantity)
             write_to_exchange(exchange, order)
-        elif recent_stock_prices['VALE'][-1] * quantity + 10 < recent_stock_prices['VALBZ'][-1] * quantity and (curr_pos["VALE"] + quantity < position["VALE"]) and (curr_pos["VALBZ"] - quantity > position["VALBZ"]):
+        elif recent_stock_prices['VALE'][-1] * quantity + 10 < recent_stock_prices['VALBZ'][-1] * quantity and (curr_pos["VALE"] + quantity < position["VALE"]) and (curr_pos["VALBZ"] - quantity > -1 * position["VALBZ"]):
             ID += 1
             expected_cash -= recent_stock_prices['VALE'][-1] * quantity
             print("tryna buy vale", recent_stock_prices['VALE'][-1])
