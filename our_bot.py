@@ -51,7 +51,7 @@ mean_bond_price = 1000
 def get_bond_price(message):
     global recent_bond_prices
     if message['type'] == 'trade' and message['symbol'] == 'BOND':
-        if len(recent_bond_prices > 100):
+        if len(recent_bond_prices) > 100:
             recent_bond_prices = recent_bond_prices[-99:0]
             recent_bond_prices.append(messaage['price'])
         else:
@@ -63,7 +63,7 @@ ID = 0
 def basic_buy_bond_order():
     global ID
     ID += 1
-    price = int(mean_bond_price) - 2
+    price = int(mean_bond_price) - 1
     size = 2  # TODO: change to something better
     order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "BUY", "price": price, "size": size}
     pending_orders[ID] = (order, size)
@@ -72,7 +72,7 @@ def basic_buy_bond_order():
 def basic_sell_bond_order():
     global ID
     ID += 1
-    price = int(mean_bond_price) + 2
+    price = int(mean_bond_price) + 1
     size = 2  # TODO: change to something better
     order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "SELL", "price": price, "size": size}
     pending_orders[ID] = (order, size)
@@ -99,7 +99,7 @@ def main():
 
         if len(pending_orders) < 6:
             take_action()
-            print("we have placed", len(pending_orders), "pending orders so far and we have ", cash, " USD left"
+            print("we have placed", len(pending_orders), "pending orders so far and we have ", cash, " USD")
         if message['type'] == 'reject':
             print(message)
         if message['type'] == 'fill':
