@@ -22,7 +22,7 @@ test_mode = True
 # 0 is prod-like
 # 1 is slower
 # 2 is empty
-test_exchange_index=1
+test_exchange_index=0
 prod_exchange_hostname="production"
 
 port=25000 + (test_exchange_index if test_mode else 0)
@@ -130,11 +130,11 @@ def main():
         if message['type'] == 'reject':
             print(message)
 
-        if message['type'] == 'ack':
-            print("Placed order of ", str(pending_orders[message['order_id']]))
+        #if message['type'] == 'ack':
+            #print("Placed order of ", str(pending_orders[message['order_id']]))
 
         if message['type'] == 'fill':
-            print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
+            #print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
             curr_order = pending_orders[message['order_id']]
             pending_orders[message['order_id']] = (curr_order[0], curr_order[1] - message['size'])
             if message['dir'] == 'BUY':
