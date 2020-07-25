@@ -109,11 +109,11 @@ def buy_sell_bonds(message, exchange):
         global ID
         ID += 1
         size = 1
-        if message['price'] < 1000  and (curr_pos["BOND"] + quantity < position["BOND"]):
+        if message['price'] < 1000  and (curr_pos["BOND"] + size < position["BOND"]):
             if curr_pos['BOND'] + size > position['BOND']:  # we cant buy more than limit
                 return None
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "BUY", "price": message['price'], "size": size}
-        elif message['price'] >= 1000 and (curr_pos["BOND"] - quantity > -1 * position["BOND"]):
+        elif message['price'] >= 1000 and (curr_pos["BOND"] - size > -1 * position["BOND"]):
             if curr_pos['BOND'] - size < -position['BOND']:  # we cant buy more than limit
                 return None
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "SELL", "price": message['price'], "size": size}
@@ -126,6 +126,9 @@ def buy_convert_sell_etf(message, exchange):
     global position
     global curr_pos
 
+    combined = 3 * recent_stock_prices['BOND'] + 2 * 
+    if recent_stock_prices("ETF") < 
+
 
 
 def buy_convert_sell_adr(message, exchange):
@@ -137,10 +140,10 @@ def buy_convert_sell_adr(message, exchange):
     global position
     global curr_pos
     # and (curr_pos["VALBZ"] + quantity < position["VALBZ"]) and (curr_pos["VALE"] - quantity > position["VALE"])
-    if message['type'] == 'trade' and message['symbol'] == 'VALBZ':
-        add_to_recent_list('VALBZ', recent_stock_quantities['VALBZ'], recent_stock_prices['VALBZ'])
-    elif message['type'] == 'trade' and message['symbol'] == 'VALE':
-        add_to_recent_list('VALE', recent_stock_quantities['VALE'], recent_stock_prices['VALE'])
+    # if message['type'] == 'trade' and message['symbol'] == 'VALBZ':
+    #     add_to_recent_list('VALBZ', recent_stock_quantities['VALBZ'], recent_stock_prices['VALBZ'])
+    # elif message['type'] == 'trade' and message['symbol'] == 'VALE':
+    #     add_to_recent_list('VALE', recent_stock_quantities['VALE'], recent_stock_prices['VALE'])
  
     
     if recent_stock_prices['VALBZ'] and recent_stock_prices['VALE']:
