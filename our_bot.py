@@ -22,7 +22,7 @@ test_mode = True
 # 0 is prod-like
 # 1 is slower
 # 2 is empty
-test_exchange_index=1
+test_exchange_index=0
 prod_exchange_hostname="production"
 
 port=25000 + (test_exchange_index if test_mode else 0)
@@ -79,6 +79,28 @@ def basic_sell_bond_order():
     pending_orders[ID] = (order, size)
     return order
 
+expected_cash = 0
+
+def buy_sell_bonds(message, exchange):
+    """
+    Actually writes the order
+    """
+    if message['type'] == 'trade' and message['symbol'] == 'BOND':
+        global ID
+	global expected_cash
+        ID += 1
+        size = message['size']
+        if message['price'] < 1000:
+            expected_cash -= message['price']
+           # print("tryna buy", message['price'])
+            order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "BUY", "price": message['price'], "size": size}
+        elif message['price'] >= 1000:
+	   # print('tryna sell', message['price'])
+            expected_cash += message['price']
+            order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "SELL", "price": message['price'], "size": size}
+        pending_orders[ID] = (order, size)
+        write_to_exchange(exchange, order)
+
 
 def take_action():
     write_to_exchange(connect(), basic_buy_bond_order())
@@ -93,14 +115,19 @@ def main():
     # Since many write messages generate marketdata, this will cause an
     # exponential explosion in pending messages. Please, don't do that!
     print("The exchange replied:", hello_from_exchange, file=sys.stderr)
+    global cash
     while True:
         message = read_from_exchange(exchange)
         
-        get_bond_price(message)
+        # buys/sells bonds
+        if expected_cash > -20000:
+            buy_sell_bonds(message, exchange)
 
-        if len(pending_orders) < 6 and recent_bond_prices:
-            take_action()
-            print("we have placed", len(pending_orders), "pending orders so far and we have ", cash, " USD")
+        # get_stock_price(message)
+
+        #if len(pending_orders) < 6 and recent_bond_prices:
+        #    take_action()
+        #    print("we have placed", len(pending_orders), "pending orders so far and we have ", cash, " USD")
 
 #	elif len(pending_orders) == 6:
 #	    print("OUR PENDING ORDERS ARE:")
@@ -110,14 +137,13 @@ def main():
         if message['type'] == 'reject':
             print(message)
 
-        if message['type'] == 'ack':
-            print("Placed order of ", str(pending_orders[message['order_id']]))
+        #if message['type'] == 'ack':
+            #print("Placed order of ", str(pending_orders[message['order_id']]))
 
         if message['type'] == 'fill':
-            print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
+            #print("FILLED ORDER", message['order_id'], "TO", message['size'], "SHARES...")
             curr_order = pending_orders[message['order_id']]
             pending_orders[message['order_id']] = (curr_order[0], curr_order[1] - message['size'])
-            global cash
             if message['dir'] == 'BUY':
                 cash -= message['size'] * message['price']
             elif message['dir'] == 'SELL':
