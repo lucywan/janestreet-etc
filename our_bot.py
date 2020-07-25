@@ -134,8 +134,9 @@ def buy_convert_sell_adr(message, exchange):
     elif message['type'] == 'trade' and message['symbol'] == 'VALE':
         add_to_recent_list('VALE', recent_stock_quantities['VALE'], recent_stock_prices['VALE'])
  
-    quantity = min(recent_stock_quantities['VALBZ'][-1], recent_stock_quantities['VALE'][-1])
+    
     if recent_stock_prices['VALBZ'] and recent_stock_prices['VALE']:
+        quantity = min(recent_stock_quantities['VALBZ'][-1], recent_stock_quantities['VALE'][-1])
         if (recent_stock_prices['VALBZ'][-1] * quantity + 10 < recent_stock_prices['VALE'][-1] * quantity) and (curr_pos["VALBZ"] + quantity < position["VALBZ"]) and (curr_pos["VALE"] - quantity > position["VALE"]):
             ID += 1
             expected_cash -= recent_stock_prices['VALBZ'][-1] * quantity
@@ -185,7 +186,7 @@ def sell_adr(message, exchange):
  
     quantity_e = min(curr_pos["VALBZ"], recent_stock_quantities['VALE'][-1])
     quantity_bz =  min(recent_stock_quantities['VALBZ'][-1], curr_pos("VALE"))
-    if recent_stock_prices['VALBZ'][-1] * quantity_e + 10 < recent_stock_prices['VALE'][-1] * quantity_e: 
+    if recent_stock_prices['VALBZ'][-1] * quantity_e + 10 < curr_pos("VALE") * quantity_e: 
         ID += 1
         
         print("tryna convert VALBZ tp VAL")
