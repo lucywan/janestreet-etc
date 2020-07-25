@@ -49,8 +49,8 @@ recent_bond_prices = []
 mean_bond_price = 0
 
 def get_bond_price(message):
-    global recent_bond_prices
     if message['type'] == 'trade' and message['symbol'] == 'BOND':
+        print(message)
         if len(recent_bond_prices) == 100:
             recent_bond_prices.pop(0)
             recent_bond_prices.append(message['price'])
@@ -98,9 +98,14 @@ def main():
         
         get_bond_price(message)
 
-        if len(pending_orders) < 6:
+        if len(pending_orders) < 6 and recent_bond_prices:
             take_action()
             print("we have placed", len(pending_orders), "pending orders so far and we have ", cash, " USD")
+
+#	elif len(pending_orders) == 6:
+#	    print("OUR PENDING ORDERS ARE:")
+      #      for order in pending_orders.values():
+      #          print(order[0])
         
         if message['type'] == 'reject':
             print(message)
