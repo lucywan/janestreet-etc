@@ -48,8 +48,8 @@ cash = 0
 ID = 0
 expected_cash = 0
 MOST_RECENT = 100
-recent_stock_prices = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[]}
-recent_stock_quantities = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[]}
+recent_stock_prices = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[], 'XLF':[]}
+recent_stock_quantities = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[], 'XLF':[]}
 
 position = {"BOND": 100, "VALBZ": 10, "VALE": 10, "GS": 100, "MS": 100, "WFC": 100, "XLF": 100}
 curr_pos = {"BOND": 0, "VALBZ": 0, "VALE": 0, "GS": 0, "MS": 0, "WFC": 0, "XLF": 0}
@@ -66,7 +66,7 @@ def add_to_recent_list(stockName, quantity, price):
     else:
         recent_stock_quantities[stockName].append(price)
 
-mean_stock_prices = {'MS':0, 'WFC':0, 'GS':0, 'VALBZ':0, 'VALE':0}
+mean_stock_prices = {'MS':0, 'WFC':0, 'GS':0, 'VALBZ':0, 'VALE':0, 'XLF':0}
 
 def get_stocks_prices(message):
     if message['type'] == 'trade' and message['symbol'] != 'BOND':
@@ -116,7 +116,11 @@ def buy_sell_bonds(message, exchange):
         pending_orders[ID] = (order, size)
         write_to_exchange(exchange, order)
 
-
+def buy_convert_sell_etf(message, exchange):
+    global ID
+    global expected_cash
+    global position
+    global curr_pos
 
 
 
