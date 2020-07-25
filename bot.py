@@ -47,7 +47,7 @@ pending_orders = {}
 cash = 0
 ID = 0
 expected_cash = 0
-MOST_RECENT = 200
+MOST_RECENT = 3
 recent_stock_prices = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[], 'XLF':[]}
 recent_stock_quantities = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[], 'XLF':[]}
 
@@ -86,7 +86,7 @@ def buy_sell_stocks(message, exchange):
     if stockName == 'BOND' or stockName == 'XLF' or stockName == 'VALE':
         return None
     # we buy stock if trade price is lower than fair price (aka mean)
-    if price + 1.2*margin < int(mean_stock_prices[stockName]):
+    if price + margin < int(mean_stock_prices[stockName]):
 	print('boutta buy', stockName, 'cuz its', price, 'and mean price for it is', mean_stock_prices[stockName])
         if curr_pos[stockName] + quantity > position[stockName]:  # we cant buy more than limit
             return None
@@ -94,7 +94,7 @@ def buy_sell_stocks(message, exchange):
         order = {"type": "add", "order_id": ID, "symbol": stockName, "dir": "BUY", "price": price, "size": quantity}
         pending_orders[ID] = (order, quantity)
         write_to_exchange(exchange, order)
-    elif price - 1.75*margin > int(mean_stock_prices[stockName]):
+    elif price - margin > int(mean_stock_prices[stockName]):
 	print('selling stuff!')
         if curr_pos[stockName] - quantity < -position[stockName]:  # we cant buy more than limit
             return None
