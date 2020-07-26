@@ -47,7 +47,7 @@ pending_orders = {}
 cash = 0
 ID = 0
 expected_cash = 0
-MOST_RECENT = 100
+MOST_RECENT = 3
 recent_stock_prices = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[], 'XLF':[]}
 recent_stock_quantities = {'MS':[], 'WFC':[], 'GS':[], 'VALBZ':[], 'VALE':[], 'XLF':[]}
 
@@ -78,7 +78,7 @@ def get_stocks_prices(message):
 
 def buy_sell_stocks(message, exchange):
     global ID
-    margin = 2
+    margin = 3
     if message['type'] != 'trade':
         return None
 
@@ -86,7 +86,7 @@ def buy_sell_stocks(message, exchange):
     if stockName == 'BOND' or stockName == 'XLF' or stockName == 'VALE':
         return None
     # we buy stock if trade price is lower than fair price (aka mean)
-    if price + 1.2*margin < int(mean_stock_prices[stockName]):
+    if price + margin < int(mean_stock_prices[stockName]):
 	print('boutta buy', stockName, 'cuz its', price, 'and mean price for it is', mean_stock_prices[stockName])
         if curr_pos[stockName] + quantity > position[stockName]:  # we cant buy more than limit
             return None
@@ -94,7 +94,7 @@ def buy_sell_stocks(message, exchange):
         order = {"type": "add", "order_id": ID, "symbol": stockName, "dir": "BUY", "price": price, "size": quantity}
         pending_orders[ID] = (order, quantity)
         write_to_exchange(exchange, order)
-    elif price - 1.75*margin > int(mean_stock_prices[stockName]):
+    elif price - margin > int(mean_stock_prices[stockName]):
 	print('selling stuff!')
         if curr_pos[stockName] - quantity < -position[stockName]:  # we cant buy more than limit
             return None
@@ -133,35 +133,35 @@ def buy_convert_sell_etf(message, exchange):
         if recent_stock_prices["XLF"][-1] * 10 + 10 < combined * 10:
             ID += 1
             expected_cash -= recent_stock_prices['XLF'][-1]
-            print("tryna buy etf", recent_stock_prices['XLF'][-1])
+            print("tryna buy EEEETTTTFFFF", recent_stock_prices['XLF'][-1])
             order = {"type": "add", "order_id": ID, "symbol": "XLF", "dir": "BUY", "price": recent_stock_prices['XLF'][-1], "size":quantity}
             pending_orders[ID] = (order, quantity)
             write_to_exchange(exchange, order)
-            print("tryna convert ETF to other")
+            print("tryna convert EEEETTTTFFFF to other")
             ID+=1
             expected_cash -= 10
             order = {"type": "convert", "order_id": ID, "symbol": "XLF", "dir": "SELL", "size": quantity}
             pending_orders[ID] = (order, quantity)
             write_to_exchange(exchange, order)
-            print("tryna sell bond", recent_stock_prices['BOND'][-1])
+            print("tryna sell bond EEEETTTTFFFF", recent_stock_prices['BOND'][-1])
             ID += 1
             expected_cash += recent_stock_prices['BOND'][-1] * 30
             order = {"type": "add", "order_id": ID, "symbol": "BOND", "dir": "SELL", "price": recent_stock_prices['BOND'][-1], "size": 30}
             pending_orders[ID] = (order, 30)
             write_to_exchange(exchange, order)
-            print("tryna sell bond", recent_stock_prices['GS'][-1])
+            print("tryna sell GS EEEETTTTFFFF", recent_stock_prices['GS'][-1])
             ID+=1
             expected_cash += recent_stock_prices['GS'][-1] * 20
             order = {"type": "add", "order_id": ID, "symbol": "GS", "dir": "SELL", "price": recent_stock_prices['GS'][-1], "size": 20}
             pending_orders[ID] = (order, 20)
             write_to_exchange(exchange, order)
-            print("tryna sell bond", recent_stock_prices['MS'][-1])
+            print("tryna sell MS EEEETTTTFFFF", recent_stock_prices['MS'][-1])
             ID+=1
             expected_cash += recent_stock_prices['MS'][-1] * 30
             order = {"type": "add", "order_id": ID, "symbol": "MS", "dir": "SELL", "price": recent_stock_prices['MS'][-1], "size": 30}
             pending_orders[ID] = (order, 30)
             write_to_exchange(exchange, order)
-            print("tryna sell bond", recent_stock_prices['WFC'][-1])
+            print("tryna sell WFC EEEETTTTFFFF", recent_stock_prices['WFC'][-1])
             ID+=1
             expected_cash += recent_stock_prices['WFC'][-1] * 20
             order = {"type": "add", "order_id": ID, "symbol": "WFC", "dir": "SELL", "price": recent_stock_prices['WFC'][-1], "size": 20}
@@ -190,17 +190,17 @@ def buy_convert_sell_adr(message, exchange):
         if (recent_stock_prices['VALBZ'][-1] * quantity + 10 < recent_stock_prices['VALE'][-1] * quantity) and (curr_pos["VALBZ"] + quantity < position["VALBZ"]) and (curr_pos["VALE"] - quantity > -1 * position["VALE"]):
             ID += 1
             expected_cash -= recent_stock_prices['VALBZ'][-1] * quantity
-            print("tryna buy valbz", recent_stock_prices['VALBZ'][-1])
+            print("tryna buy valbz AAADDDRRR", recent_stock_prices['VALBZ'][-1])
             order = {"type": "add", "order_id": ID, "symbol": "VALBZ", "dir": "BUY", "price": recent_stock_prices['VALBZ'][-1], "size": quantity}
             pending_orders[ID] = (order, quantity)
             write_to_exchange(exchange, order)
-            print("tryna convert VALBZ tp VAL")
+            print("tryna convert VALBZ tp VAL AAADDDRRR")
             ID+=1
             expected_cash -= 10
             order = {"type": "convert", "order_id": ID, "symbol": "VALE", "dir": "BUY", "size": quantity}
             pending_orders[ID] = (order, quantity)
             write_to_exchange(exchange, order)
-            print("tryna sell vale", recent_stock_prices['VALE'][-1])
+            print("tryna sell vale AAADDDRRR", recent_stock_prices['VALE'][-1])
             ID += 1
             expected_cash += recent_stock_prices['VALE'][-1] * quantity
             order = {"type": "add", "order_id": ID, "symbol": "VALE", "dir": "SELL", "price": recent_stock_prices['VALE'][-1], "size": quantity}
@@ -209,17 +209,17 @@ def buy_convert_sell_adr(message, exchange):
         elif recent_stock_prices['VALE'][-1] * quantity + 10 < recent_stock_prices['VALBZ'][-1] * quantity and (curr_pos["VALE"] + quantity < position["VALE"]) and (curr_pos["VALBZ"] - quantity > -1 * position["VALBZ"]):
             ID += 1
             expected_cash -= recent_stock_prices['VALE'][-1] * quantity
-            print("tryna buy vale", recent_stock_prices['VALE'][-1])
+            print("tryna buy vale AAADDDRRR", recent_stock_prices['VALE'][-1])
             order = {"type": "add", "order_id": ID, "symbol": "VALE", "dir": "BUY", "price": recent_stock_prices['VALE'][-1], "size": quantity}
             pending_orders[ID] = (order, quantity)
             write_to_exchange(exchange, order)
-            print("tryna convert VALE tp VALBZ")
+            print("tryna convert VALE tp VALBZ AAADDDRRR")
             expected_cash -= 10
             ID+=1
             order = {"type": "convert", "order_id": ID, "symbol": "VALBZ", "dir": "BUY", "size": quantity}
             pending_orders[ID] = (order, quantity)
             write_to_exchange(exchange, order)
-            print("tryna sell vale", recent_stock_prices['VALBZ'][-1])
+            print("tryna sell vale AAADDDRRR", recent_stock_prices['VALBZ'][-1])
             ID += 1
             expected_cash += recent_stock_prices['VALBZ'][-1] * quantity
             order = {"type": "add", "order_id": ID, "symbol": "VALBZ", "dir": "SELL", "price": recent_stock_prices['VALBZ'][-1], "size": quantity}
