@@ -186,6 +186,7 @@ def buy_convert_sell_adr(message, exchange):
     
     if recent_stock_prices['VALBZ'] and recent_stock_prices['VALE']:
         quantity = min(recent_stock_quantities['VALBZ'][-1], recent_stock_quantities['VALE'][-1])
+        quantity = 10
         if (recent_stock_prices['VALBZ'][-1] * quantity + 10 < recent_stock_prices['VALE'][-1] * quantity) and (curr_pos["VALBZ"] + quantity < position["VALBZ"]) and (curr_pos["VALE"] - quantity > -1 * position["VALE"]):
             ID += 1
             expected_cash -= recent_stock_prices['VALBZ'][-1] * quantity
